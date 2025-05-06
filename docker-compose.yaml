@@ -1,16 +1,8 @@
-#This file builds the Docker images for a React/NodeJS application and runs it as microservices on Docker containers
-
-#To ensure successful execution, clone this entire repository and execute this file while in the root folder of the cloned repository
-
-#It's also a requirement to have Docker and the docker-compose plugin installed in your environment
-
-#To launch this app without having to clone the entire repository,use the docker-compose.yaml file to run the app
 
 version: "3.8"
 
 services:
 
-  #Builds the frontend Docker image and creates the frontend microservice
   brian-yolo-client:
     build: 
       context: ./client
@@ -24,7 +16,6 @@ services:
     networks:
       - app-net
 
-  #Builds the backend Docker image and creates the backend microservice
   brian-yolo-backend:
     image: brianbwire/brian-yolo-backend:v1.0.0
     build: ./backend
@@ -39,7 +30,6 @@ services:
     networks:
       - app-net
 
-  #Creates the database microservice
   app-ip-mongo:
     image: mongo
     container_name: app-mongo
@@ -52,8 +42,7 @@ services:
         source: app-mongo-data
         target: /data/db
 
-#Creates the network infrastructure necessary for the containers to communicate with each other
-networks:
+
   app-net:
     name: app-net
     driver: bridge
@@ -63,7 +52,6 @@ networks:
         - subnet: 172.20.0.0/16 
           ip_range: 172.20.0.0/16 
 
-#Creates a Docker volume that persists all the data stored in the database
-volumes:
+
   app-mongo-data:
     driver: local
