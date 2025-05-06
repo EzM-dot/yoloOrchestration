@@ -4,25 +4,32 @@ FROM node:14-slim AS build
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy the package.json and package-lock.json files to the container
+# Copy package files
 COPY package*.json ./
 
 # Install application dependencies
 RUN npm install
 
-# Copy the rest of the application code to the container
+# Copy the rest of the application code
 COPY . .
 
-FROM alpine:3.16.7
+# Build the application
+RUN npm run build
 
-WORKDIR /app
+# Use nginx to serve the built app
+FROM nginx:alpine
 
-RUN apk update && apk add npm
+# Copy the built app from the build stage
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
 
-COPY --from=build /usr/src/app /app
+# Copy the images directory
+COPY --from=build /usr/src/app/public/images /usr/share/nginx/html/images
 
-# Expose the port the app runs on
-EXPOSE 3000
+# Copy the nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Define the command to run your app
-CMD ["npm", "start"]
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

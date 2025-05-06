@@ -12,13 +12,13 @@ services:
 
   #Builds the frontend Docker image and creates the frontend microservice
   brian-yolo-client:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
     image: brianbwire/brian-yolo-client:v1.0.0
-    build: ./client
     container_name: brian-yolo-client
-    stdin_open: true
-    tty: true
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on: 
       - brian-yolo-backend
     networks:
