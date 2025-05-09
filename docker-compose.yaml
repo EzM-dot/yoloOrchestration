@@ -10,7 +10,7 @@ services:
     image: brianbwire/brian-yolo-client:v1.0.0
     container_name: brian-yolo-client
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - HOST=0.0.0.0
       - DANGEROUSLY_DISABLE_HOST_CHECK=true
@@ -27,7 +27,7 @@ services:
     tty: true
     restart: always
     ports:
-      - "5000:5000"
+      - "5001:5000"
     depends_on: 
       - app-ip-mongo
     networks:
@@ -37,7 +37,7 @@ services:
     image: mongo
     container_name: app-mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     networks:
       - app-net
     volumes:

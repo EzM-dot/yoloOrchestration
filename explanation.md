@@ -5,8 +5,8 @@
 ### Frontend (React)
 - **Base Image**: `node:14-slim`
   - **Reasoning**:
-    - Lightweight version of Node.js (slim variant)
-    - Version 14 provides LTS (Long Term Support)
+    - Lightweight version of Node.js
+    - Version 14 provides LTS
     - Contains only essential packages, reducing attack surface
     - Smaller image size compared to the full Node.js image
 

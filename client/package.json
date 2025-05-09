@@ -11,6 +11,7 @@
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
     "axios": "^0.19.2",
+    "http-proxy-middleware": "^2.0.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1"
@@ -21,7 +22,16 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:5000",
+  "proxy": {
+    "/api": {
+      "target": "http://brian-yolo-backend:5000",
+      "changeOrigin": true,
+      "secure": false,
+      "headers": {
+        "Connection": "keep-alive"
+      }
+    }
+  },
   "eslintConfig": {
     "extends": "react-app"
   },
