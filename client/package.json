@@ -22,16 +22,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "proxy": {
-    "/api": {
-      "target": "http://brian-yolo-backend:5000",
-      "changeOrigin": true,
-      "secure": false,
-      "headers": {
-        "Connection": "keep-alive"
-      }
-    }
-  },
+  "proxy": "http://em-yolo-backend:5000",
   "eslintConfig": {
     "extends": "react-app"
   },

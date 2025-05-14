@@ -1,52 +1,67 @@
-
 version: "3.8"
 
 services:
 
-  brian-yolo-client:
+  ecommerce-site-client:
     build: 
       context: ./client
       dockerfile: Dockerfile
-    image: brianbwire/brian-yolo-client:v1.0.0
-    container_name: brian-yolo-client
+    image: edwinme/ecommerce:v1.1
+    container_name: ecommerce-site-client
     ports:
       - "3001:3000"
     environment:
-      - HOST=0.0.0.0
-      - DANGEROUSLY_DISABLE_HOST_CHECK=true
-    depends_on: 
-      - brian-yolo-backend
+      - REACT_APP_API_URL=http://ecommerce-site-backend:5000
+    depends_on:
+      ecommerce-site-backend:
+        condition: service_healthy
     networks:
       - app-net
 
-  brian-yolo-backend:
-    image: brianbwire/brian-yolo-backend:v1.0.0
+  ecommerce-site-backend:
+    image: edwinme/ecommerce:v1.1
     build: ./backend
-    container_name: brian-yolo-backend
-    stdin_open: true
-    tty: true
+    container_name: ecommerce-site-backend
     restart: always
     ports:
       - "5001:5000"
-    depends_on: 
-      - app-ip-mongo
+    environment:
+      - MONGO_URI=mongodb://app-ip-mongo:27017/ecommerce
+    depends_on:
+      app-ip-mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       - app-net
 
   app-ip-mongo:
-    image: mongo
+    image: mongo:5.0
     container_name: app-mongo
     ports:
-      - "27018:27017"
+      - "27019:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=your_secure_password
+      - MONGO_INITDB_DATABASE=ecommerce
     networks:
       - app-net
     volumes:
       - app-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 networks:
   app-net:
     driver: bridge
-
 
 volumes:
   app-mongo-data:
