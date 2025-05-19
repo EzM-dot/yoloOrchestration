@@ -1,7 +1,7 @@
 # YOLO Application Deployment on GKE
 
 ## Overview
-This project demonstrates the containerization and Kubernetes deployment of a full-stack YOLO (You Only Look Once) object detection application. The application is deployed on Google Kubernetes Engine (GKE) and consists of:
+This project demonstrates the containerization and Kubernetes deployment of an object detection application. The application is deployed on Google Kubernetes Engine (GKE) and consists of:
 
 - **Frontend**: React-based user interface
 - **Backend**: Node.js/Express API server
