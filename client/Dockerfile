@@ -1,20 +1,34 @@
-# Use Node.js as base image
-FROM node:14-slim
+# Build stage
+FROM node:14.21.3-alpine AS build
 
-# Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
 
 # Install dependencies
-COPY package*.json ./
 RUN npm install
 
-# Copy app source
+# Copy application code
 COPY . .
-# Make start script executable
-RUN chmod +x /usr/src/app/start.sh
 
-# Expose port 3000
-EXPOSE 3000
+# Build the application
+RUN npm run build
 
-# Start the application
-CMD ["./start.sh"]
+# Production stage
+FROM nginx:1.21.6-alpine
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built assets from build stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Expose port 80 for HTTP
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

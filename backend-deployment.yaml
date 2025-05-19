@@ -1,25 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: yolo4-backend
   labels:
-    app: backend
+    app: yolo4
+    component: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: yolo4
+      component: backend
   template:
     metadata:
       labels:
-        app: backend
+        app: yolo4
+        component: backend
     spec:
       containers:
         - name: backend
-          image: brianbwire/brian-yolo-backend:v1.0.0
+          image: edwinme/yolo4-backend:latest
           command: ["npm", "start"] 
           ports:
             - containerPort: 5000
+          env:
+            - name: MONGODB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-username
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-password
+            - name: MONGODB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-database
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGODB_USERNAME):$(MONGODB_PASSWORD)@mongodb-service:27017/$(MONGODB_DATABASE)?authSource=admin"
           resources:
             limits:
               memory: "256Mi"
@@ -31,14 +52,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: yolo4-backend-service
+  labels:
+    app: yolo4
+    component: backend
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
-    app: backend
+    app: yolo4
+    component: backend
   ports:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-      nodePort: 30100
-  

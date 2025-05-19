@@ -1,0 +1,135 @@
+---
+# mongodb headless-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  labels:
+    app: yolo4
+    component: database
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  clusterIP: None
+  selector:
+    app: yolo4
+    component: database
+---
+# StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  labels:
+    app: yolo4
+    component: database
+spec:
+  serviceName: mongodb-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yolo4
+      component: database
+  template:
+    metadata:
+      labels:
+        app: yolo4
+        component: database
+    spec:
+      terminationGracePeriodSeconds: 10
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+
+      containers:
+      - name: mongodb
+        image: mongo:5.0.14
+        ports:
+        - containerPort: 27017
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          runAsUser: 999
+          runAsGroup: 999
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongodb-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongodb-password
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongodb-database
+        command:
+        - mongod
+        - --bind_ip_all
+        - --auth
+        args:
+        - --port=27017
+        - --dbpath=/data/db
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+        - name: mongodb-init-scripts
+          mountPath: /docker-entrypoint-initdb.d
+        livenessProbe:
+          exec:
+            command:
+            - mongosh
+            - --username
+            - "$(MONGO_INITDB_ROOT_USERNAME)"
+            - --password
+            - "$(MONGO_INITDB_ROOT_PASSWORD)"
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - mongosh
+            - --username
+            - "$(MONGO_INITDB_ROOT_USERNAME)"
+            - --password
+            - "$(MONGO_INITDB_ROOT_PASSWORD)"
+            - --eval
+            - "db.adminCommand('ping')"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: mongodb-secret
+        secret:
+          secretName: mongodb-secret
+          items:
+          - key: mongodb-username
+            path: mongodb-username
+          - key: mongodb-password
+            path: mongodb-password
+      - name: mongodb-init-scripts
+        configMap:
+          name: mongodb-init-scripts
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

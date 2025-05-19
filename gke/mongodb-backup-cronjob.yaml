@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mongodb-backup
+  labels:
+    app: yolo4
+    component: backup
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodb-backup
+            image: google/cloud-sdk:slim
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Install MongoDB tools
+              apt-get update && apt-get install -y mongodb-database-tools
+              
+              # Create backup
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+              BACKUP_DIR=/backup/$TIMESTAMP
+              mkdir -p $BACKUP_DIR
+              
+              # Take backup
+              mongodump --host=mongodb-service:27017 \
+                       --username=$MONGO_USERNAME \
+                       --password=$MONGO_PASSWORD \
+                       --authenticationDatabase=admin \
+                       --out=$BACKUP_DIR
+              
+              # Upload to GCS
+              gsutil -m cp -r $BACKUP_DIR gs://${GCS_BUCKET}/mongodb-backups/
+              
+              # Cleanup
+              rm -rf $BACKUP_DIR
+            env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongodb-password
+            - name: GCS_BUCKET
+              value: "your-gcs-bucket-name"  # Replace with your GCS bucket name
+            volumeMounts:
+            - name: backup-dir
+              mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: backup-dir
+            emptyDir: {}

@@ -7,12 +7,21 @@ const upload = multer();
 const productRoute = require('./routes/api/productRoute');
 
 // Connecting to the Database
-let mongodb_url = 'mongodb://localhost/';
-let dbName = 'yolomy';
+const dbName = process.env.MONGODB_DATABASE || 'yolomy';
+const username = process.env.MONGODB_USERNAME || 'username';
+const password = process.env.MONGODB_PASSWORD || 'password';
 
-// define a url to connect to the database
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://app-ip-mongo:27017/' + dbName
-mongoose.connect(MONGODB_URI,{useNewUrlParser: true, useUnifiedTopology: true  } )
+// Define a URL to connect to the database
+const MONGODB_URI = process.env.MONGODB_URI || 
+  `mongodb://${username}:${password}@mongodb-service:27017/${dbName}?authSource=admin`;
+
+// Connect to MongoDB
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true, 
+  useUnifiedTopology: true,
+  authSource: 'admin'
+});
+
 let db = mongoose.connection;
 
 // Check Connection

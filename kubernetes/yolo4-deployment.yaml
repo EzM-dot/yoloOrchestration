@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo4-backend
+  labels:
+    app: yolo4
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: yolo4
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: yolo4
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: gcr.io/orchestration-one/yolo4-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "5000"
+        - name: MONGODB_URI
+          value: "mongodb://$(MONGODB_USERNAME):$(MONGODB_PASSWORD)@mongodb-service:27017/$(MONGODB_DATABASE)?authSource=admin"
+        envFrom:
+        - configMapRef:
+            name: mongodb-config
+        - secretRef:
+            name: mongodb-secret
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yolo4-frontend
+  labels:
+    app: yolo4
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: yolo4
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: yolo4
+        component: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: gcr.io/orchestration-one/yolo4-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
