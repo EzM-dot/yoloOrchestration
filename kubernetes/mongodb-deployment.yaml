@@ -33,6 +33,13 @@ spec:
         volumeMounts:
         - name: mongodb-data
           mountPath: /data/db
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
       volumes:
       - name: mongodb-data
         emptyDir: {}
